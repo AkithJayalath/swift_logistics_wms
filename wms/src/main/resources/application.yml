@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/wmsdb
+    username: wmsuser
+    password: wmspass
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: wmsuser
+    password: wmspass
+
+server:
+  port: 8080

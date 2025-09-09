@@ -1,0 +1,3 @@
+public enum PackageStatus {
+    RECEIVED, STAGED, LOADED, DISPATCHED, DELIVERED, FAILED
+}
