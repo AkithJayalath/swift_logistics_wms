@@ -1,3 +1,10 @@
+package lk.swiftlogistics.wms.messaging;
+
+import org.springframework.stereotype.Service;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import lombok.RequiredArgsConstructor;
+import lk.swiftlogistics.wms.config.RabbitConfig;
+
 @Service
 @RequiredArgsConstructor
 public class EventPublisher {

@@ -1,3 +1,14 @@
+package lk.swiftlogistics.wms.messaging;
+
+import org.springframework.stereotype.Service;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import lombok.RequiredArgsConstructor;
+import lk.swiftlogistics.wms.repo.PackageRepository;
+import lk.swiftlogistics.wms.domain.Package;
+import lk.swiftlogistics.wms.domain.PackageStatus;
+import lk.swiftlogistics.wms.config.RabbitConfig;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class OrderListener {

@@ -1,17 +1,15 @@
 package lk.swiftlogistics.wms.domain;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.Instant;
 
 @Entity
-@Data
-public class Package {
+public class ShipmentPackage {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable=false, unique=true)
     private String clientRef;
 
     @Enumerated(EnumType.STRING)
@@ -19,4 +17,6 @@ public class Package {
 
     private String currentZone;
     private Instant lastUpdated = Instant.now();
+
+    // getters, setters
 }
