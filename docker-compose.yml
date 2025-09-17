@@ -6,11 +6,16 @@ services:
     environment:
       POSTGRES_DB: wmsdb
       POSTGRES_USER: wmsuser
-      POSTGRES_PASSWORD: akith123
+      POSTGRES_PASSWORD: wmspass
     ports:
-      - "5433:5433"
+      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wmsuser -d wmsdb"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -20,7 +25,12 @@ services:
       - "15672:15672" # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: wmsuser
-      RABBITMQ_DEFAULT_PASS: akith123
+      RABBITMQ_DEFAULT_PASS: wmspass
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   pgdata:
