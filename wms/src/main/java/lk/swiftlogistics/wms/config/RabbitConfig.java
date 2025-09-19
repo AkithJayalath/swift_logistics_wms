@@ -9,11 +9,24 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RabbitConfig {
     
-    public static final String ORDERS_QUEUE = "cma.orders.queue";
+    // Queue name that matches CMS system
+    public static final String ORDERS_QUEUE = "logistics_orders";
+    public static final String NOTIFICATIONS_QUEUE = "notifications";
+    public static final String ORDER_UPDATES_QUEUE = "order_updates";
     
     @Bean
     public Queue ordersQueue() {
         return QueueBuilder.durable(ORDERS_QUEUE).build();
+    }
+    
+    @Bean
+    public Queue notificationsQueue() {
+        return QueueBuilder.durable(NOTIFICATIONS_QUEUE).build();
+    }
+    
+    @Bean
+    public Queue orderUpdatesQueue() {
+        return QueueBuilder.durable(ORDER_UPDATES_QUEUE).build();
     }
     
     @Bean

@@ -30,4 +30,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findByAssignedDriverId(Long driverId);
     
     List<Order> findByAssignedDriverIsNull();
+    
+    List<Order> findByAssignedDriverIdAndStatusIn(Long driverId, List<OrderStatus> statuses);
 }

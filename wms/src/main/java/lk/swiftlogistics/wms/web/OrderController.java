@@ -4,6 +4,7 @@ import lk.swiftlogistics.wms.domain.Order;
 import lk.swiftlogistics.wms.domain.OrderStatus;
 import lk.swiftlogistics.wms.service.OrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +16,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/orders")
 @RequiredArgsConstructor
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173", "http://localhost:5174", "http://127.0.0.1:3000", "http://127.0.0.1:5173", "http://127.0.0.1:5174"})
+@Slf4j
 public class OrderController {
 
     private final OrderService orderService;
@@ -41,6 +44,11 @@ public class OrderController {
     @GetMapping("/status/{status}")
     public ResponseEntity<List<Order>> getOrdersByStatus(@PathVariable OrderStatus status) {
         return ResponseEntity.ok(orderService.getOrdersByStatus(status));
+    }
+
+    @GetMapping("/ready-for-dispatch")
+    public ResponseEntity<List<Order>> getReadyForDispatchOrders() {
+        return ResponseEntity.ok(orderService.getOrdersByStatus(OrderStatus.RECEIVED));
     }
 
     @GetMapping("/unassigned")
@@ -73,12 +81,21 @@ public class OrderController {
         try {
             Long driverId = request.get("driverId");
             if (driverId == null) {
-                return ResponseEntity.badRequest().body("driverId is required");
+                return ResponseEntity.badRequest().body(Map.of("error", "driverId is required"));
             }
             Order updatedOrder = orderService.assignDriverToOrder(id, driverId);
+            
+            // Log the assignment for driver app notification
+            log.info("Driver {} assigned to order {}. Driver app can be notified via /api/driver-app/driver/{}/notify-assignment", 
+                    driverId, id, driverId);
+            
+            // Note: In a real implementation, you could automatically call the driver app notification here
+            // or use an event-driven approach with message queues
+            
             return ResponseEntity.ok(updatedOrder);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            log.error("Error assigning driver to order {}: {}", id, e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -89,15 +106,15 @@ public class OrderController {
         try {
             String statusStr = request.get("status");
             if (statusStr == null) {
-                return ResponseEntity.badRequest().body("status is required");
+                return ResponseEntity.badRequest().body(Map.of("error", "status is required"));
             }
             OrderStatus newStatus = OrderStatus.valueOf(statusStr.toUpperCase());
             Order updatedOrder = orderService.updateOrderStatus(id, newStatus);
             return ResponseEntity.ok(updatedOrder);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Invalid status: " + request.get("status"));
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid status: " + request.get("status")));
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -108,13 +125,42 @@ public class OrderController {
         try {
             String dateStr = request.get("deliveryDate");
             if (dateStr == null) {
-                return ResponseEntity.badRequest().body("deliveryDate is required");
+                return ResponseEntity.badRequest().body(Map.of("error", "deliveryDate is required"));
             }
             LocalDateTime newDeliveryDate = LocalDateTime.parse(dateStr);
             Order updatedOrder = orderService.updateOrderDeliveryDate(id, newDeliveryDate);
             return ResponseEntity.ok(updatedOrder);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Invalid date format. Use ISO format: 2023-12-25T10:00:00");
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid date format. Use ISO format: 2023-12-25T10:00:00"));
         }
+    }
+
+    // Bulk operations for frontend convenience
+    @PutMapping("/bulk/assign-driver")
+    public ResponseEntity<?> bulkAssignDriver(@RequestBody Map<String, Object> request) {
+        try {
+            @SuppressWarnings("unchecked")
+            List<Long> orderIds = (List<Long>) request.get("orderIds");
+            Long driverId = ((Number) request.get("driverId")).longValue();
+            
+            if (orderIds == null || orderIds.isEmpty()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "orderIds are required"));
+            }
+            if (driverId == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "driverId is required"));
+            }
+            
+            List<Order> updatedOrders = orderService.bulkAssignDriver(orderIds, driverId);
+            return ResponseEntity.ok(Map.of("success", true, "orders", updatedOrders));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    // Get order statistics for dashboard
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getOrderStats() {
+        Map<String, Object> stats = orderService.getOrderStatistics();
+        return ResponseEntity.ok(stats);
     }
 }

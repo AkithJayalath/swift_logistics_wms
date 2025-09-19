@@ -33,7 +33,7 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.RECEIVED;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "driver_id")
     private Driver assignedDriver;
 
@@ -43,8 +43,29 @@ public class Order {
     @Column(nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    // Additional fields for frontend integration
+    @Column(name = "package_info")
+    private String packageInfo;
+
+    @Column(name = "priority")
+    private String priority = "Medium";
+
+    @Column(name = "tracking_number")
+    private String trackingNumber;
+
+    @Column(name = "warehouse_location")
+    private String warehouseLocation;
+
+    @Column(name = "weight")
+    private Double weight;
+
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = LocalDateTime.now();
+    }
+
+    // Helper method to get tracking number or client ref
+    public String getTrackingNumber() {
+        return trackingNumber != null ? trackingNumber : clientRef;
     }
 }
